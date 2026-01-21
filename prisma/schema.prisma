@@ -1,0 +1,100 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 방 테이블
+model Room {
+  id              Int       @id @default(autoincrement())
+  roomId          String    @unique @db.VarChar(12)  // nanoid로 생성된 URL용 ID
+  title           String    @db.VarChar(50)
+
+  // 방장 정보
+  hostNickname    String    @db.VarChar(20)
+  hostVisitorId   String    @db.VarChar(36)          // UUID
+
+  // 캘린더 설정
+  startDate       DateTime  @db.Date
+  endDate         DateTime  @db.Date
+
+  // 참여 설정
+  maxParticipants Int       @default(10)
+
+  // 투표 마감
+  deadline        DateTime?                           // null이면 수동 마감
+
+  // 방 상태
+  status          RoomStatus @default(VOTING)
+  confirmedDate   DateTime?  @db.Date                 // 확정된 날짜
+
+  // 타임스탬프
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 관계
+  votes           Vote[]
+
+  @@index([roomId])
+  @@index([createdAt])
+}
+
+enum RoomStatus {
+  VOTING      // 투표 진행중
+  CLOSED      // 투표 마감 (미확정)
+  CONFIRMED   // 날짜 확정됨
+  EXPIRED     // 만료됨
+}
+
+// 투표 테이블
+model Vote {
+  id            Int       @id @default(autoincrement())
+
+  // 방 참조
+  roomId        String    @db.VarChar(12)
+  room          Room      @relation(fields: [roomId], references: [roomId], onDelete: Cascade)
+
+  // 참가자 정보
+  nickname      String    @db.VarChar(20)
+  visitorId     String    @db.VarChar(36)
+
+  // 타임스탬프
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // 관계
+  selections    VoteSelection[]
+
+  // 같은 방에서 닉네임 중복 불가
+  @@unique([roomId, nickname])
+  // 같은 방에서 같은 브라우저 중복 불가
+  @@unique([roomId, visitorId])
+  @@index([roomId])
+}
+
+// 투표 선택 테이블 (날짜별 선택)
+model VoteSelection {
+  id          Int         @id @default(autoincrement())
+
+  // 투표 참조
+  voteId      Int
+  vote        Vote        @relation(fields: [voteId], references: [id], onDelete: Cascade)
+
+  // 날짜 및 선택
+  date        DateTime    @db.Date
+  status      VoteStatus
+
+  @@unique([voteId, date])
+  @@index([voteId])
+}
+
+enum VoteStatus {
+  AVAILABLE     // 가능 (초록)
+  MAYBE         // 애매함 (노랑)
+  UNAVAILABLE   // 불가능 (빨강/선택안함)
+}
