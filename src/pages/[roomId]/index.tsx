@@ -41,16 +41,24 @@ export default function VotePage() {
 
   // 기존 투표 여부 확인
   useEffect(() => {
-    if (votes) {
-      const myVote = votes.votes.find((v) => v.isMe);
-      if (myVote) {
-        setHasVoted(true);
-        setMySelections(myVote.selections as Record<string, VoteStatus>);
-      } else {
-        setShowNicknameModal(true);
-      }
+    if (!votes || !room || !visitorId) return;
+
+    const myVote = votes.votes.find((v) => v.isMe);
+
+    if (myVote) {
+      // 이미 투표한 경우
+      setHasVoted(true);
+      setNickname(myVote.nickname);
+      setMySelections(myVote.selections as Record<string, VoteStatus>);
+    } else if (room.isHost) {
+      // 방장인 경우: 닉네임 모달 없이 hostNickname 사용
+      setNickname(room.hostNickname);
+      setShowNicknameModal(false);
+    } else {
+      // 새 참가자인 경우: 닉네임 입력 모달 표시
+      setShowNicknameModal(true);
     }
-  }, [votes]);
+  }, [votes, room, visitorId]);
 
   const handleDateClick = (date: Date) => {
     if (!room || room.status !== 'VOTING') return;
@@ -205,9 +213,9 @@ export default function VotePage() {
         </div>
       </main>
 
-      {/* 닉네임 입력 모달 */}
+      {/* 닉네임 입력 모달 - 방장이 아니고 투표하지 않은 경우에만 표시 */}
       <Modal
-        isOpen={showNicknameModal && !hasVoted}
+        isOpen={showNicknameModal && !hasVoted && !room.isHost}
         onClose={() => {}}
         title={room.title}
       >

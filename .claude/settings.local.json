@@ -17,7 +17,9 @@
       "Bash(npx prisma migrate dev:*)",
       "Bash(copy:*)",
       "Bash(docker exec:*)",
-      "Bash(docker ps:*)"
+      "Bash(docker ps:*)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(pkill:*)"
     ]
   }
 }
