@@ -148,22 +148,28 @@ async function handlePost(roomId: string, req: NextApiRequest, res: NextApiRespo
       return res.status(409).json({ success: false, error: '이미 투표에 참여하셨습니다.' });
     }
 
-    // 투표 생성
+    // 투표 생성 (selections가 없어도 참가자로 등록)
     await prisma.vote.create({
       data: {
         roomId,
         nickname: nickname.trim(),
         visitorId,
-        selections: {
-          create: Object.entries(selections).map(([date, status]) => ({
-            date: new Date(date),
-            status: status as VoteStatus,
-          })),
-        },
+        selections: selections && Object.keys(selections).length > 0
+          ? {
+              create: Object.entries(selections).map(([date, status]) => ({
+                date: new Date(date),
+                status: status as VoteStatus,
+              })),
+            }
+          : undefined,
       },
     });
 
-    return res.status(201).json({ success: true, message: '투표가 완료되었습니다.' });
+    const hasSelections = selections && Object.keys(selections).length > 0;
+    return res.status(201).json({
+      success: true,
+      message: hasSelections ? '투표가 완료되었습니다.' : '참가자로 등록되었습니다.'
+    });
   } catch (error) {
     console.error('Vote submit error:', error);
     return res.status(500).json({ success: false, error: '서버 오류가 발생했습니다.' });

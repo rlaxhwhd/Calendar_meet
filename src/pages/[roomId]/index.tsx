@@ -25,7 +25,7 @@ export default function VotePage() {
     roomId as string,
     visitorId
   );
-  const { votes, submitVote, updateVote, refetch } = useVote(
+  const { votes, registerParticipant, submitVote, updateVote, refetch } = useVote(
     roomId as string,
     visitorId
   );
@@ -46,19 +46,27 @@ export default function VotePage() {
     const myVote = votes.votes.find((v) => v.isMe);
 
     if (myVote) {
-      // 이미 투표한 경우
+      // 이미 참가자로 등록된 경우
       setHasVoted(true);
       setNickname(myVote.nickname);
       setMySelections(myVote.selections as Record<string, VoteStatus>);
+      setShowNicknameModal(false);
     } else if (room.isHost) {
-      // 방장인 경우: 닉네임 모달 없이 hostNickname 사용
+      // 방장인 경우: 자동으로 참가자 등록
       setNickname(room.hostNickname);
       setShowNicknameModal(false);
+      // 방장 자동 등록
+      registerParticipant(room.hostNickname).then((result) => {
+        if (result.success) {
+          setHasVoted(true);
+          refetch();
+        }
+      });
     } else {
       // 새 참가자인 경우: 닉네임 입력 모달 표시
       setShowNicknameModal(true);
     }
-  }, [votes, room, visitorId]);
+  }, [votes, room, visitorId, registerParticipant, refetch]);
 
   const handleDateClick = (date: Date) => {
     if (!room || room.status !== 'VOTING') return;
@@ -94,8 +102,23 @@ export default function VotePage() {
       return;
     }
 
+    setIsSubmitting(true);
     setNicknameError('');
-    setShowNicknameModal(false);
+
+    try {
+      // 닉네임 등록 (참가자로 즉시 등록)
+      const result = await registerParticipant(nickname);
+
+      if (result.success) {
+        setShowNicknameModal(false);
+        setHasVoted(true); // 참가자로 등록됨
+        showToast('참가자로 등록되었습니다.', 'success');
+      } else {
+        setNicknameError(result.error || '등록에 실패했습니다.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSubmit = async () => {

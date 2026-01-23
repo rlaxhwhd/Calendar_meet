@@ -32,6 +32,29 @@ export function useVote(roomId: string | undefined, visitorId: string | null) {
     }
   }, [roomId, visitorId]);
 
+  // 닉네임만 등록 (참가자로 즉시 등록)
+  const registerParticipant = async (nickname: string) => {
+    if (!roomId || !visitorId) return { success: false, error: '잘못된 요청입니다.' };
+
+    try {
+      const response = await fetch(`/api/votes/${roomId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname, visitorId, selections: {} }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await fetchVotes();
+      }
+
+      return data;
+    } catch (err) {
+      return { success: false, error: '네트워크 오류가 발생했습니다.' };
+    }
+  };
+
   const submitVote = async (
     nickname: string,
     selections: Record<string, VoteStatus>
@@ -83,5 +106,5 @@ export function useVote(roomId: string | undefined, visitorId: string | null) {
     fetchVotes();
   }, [fetchVotes]);
 
-  return { votes, isLoading, error, refetch: fetchVotes, submitVote, updateVote };
+  return { votes, isLoading, error, refetch: fetchVotes, registerParticipant, submitVote, updateVote };
 }

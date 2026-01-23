@@ -35,13 +35,11 @@ export function Calendar({
     formatMonthYear,
   } = useCalendar(startDate, endDate);
 
-  const getVotePercentage = (date: Date): number => {
-    if (totalParticipants === 0) return 0;
+  const getVoteSegments = (date: Date) => {
     const dateStr = formatDate(date);
     const counts = allDates[dateStr];
-    if (!counts) return 0;
-    // available은 100%, maybe는 50%로 계산
-    return ((counts.available + counts.maybe * 0.5) / totalParticipants) * 100;
+    if (!counts) return { available: 0, maybe: 0, unavailable: 0 };
+    return counts;
   };
 
   return (
@@ -63,7 +61,8 @@ export function Calendar({
               isToday={isToday(date)}
               isCurrentMonth={isCurrentMonth(date)}
               voteStatus={mySelections[dateStr] || null}
-              votePercentage={getVotePercentage(date)}
+              voteSegments={getVoteSegments(date)}
+              totalParticipants={totalParticipants}
               onClick={() => onDateClick(date)}
               disabled={disabled}
             />
