@@ -33,7 +33,7 @@ export function useVote(roomId: string | undefined, visitorId: string | null) {
   }, [roomId, visitorId]);
 
   // 닉네임만 등록 (참가자로 즉시 등록)
-  const registerParticipant = async (nickname: string) => {
+  const registerParticipant = useCallback(async (nickname: string) => {
     if (!roomId || !visitorId) return { success: false, error: '잘못된 요청입니다.' };
 
     try {
@@ -53,7 +53,7 @@ export function useVote(roomId: string | undefined, visitorId: string | null) {
     } catch (err) {
       return { success: false, error: '네트워크 오류가 발생했습니다.' };
     }
-  };
+  }, [roomId, visitorId, fetchVotes]);
 
   const submitVote = async (
     nickname: string,
