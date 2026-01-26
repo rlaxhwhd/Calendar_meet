@@ -10,6 +10,8 @@ import { Calendar } from '@/components/calendar/Calendar';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Toast, useToast } from '@/components/ui/Toast';
+import { KakaoShareButton } from '@/components/share/KakaoShareButton';
+import { LinkCopyButton } from '@/components/share/LinkCopyButton';
 import { parseDate, formatKoreanDate } from '@/utils/date';
 
 export default function ResultPage() {
@@ -23,15 +25,13 @@ export default function ResultPage() {
   );
   const { votes, isLoading: votesLoading } = useVote(roomId as string, visitorId);
 
-  const [showCalendar, setShowCalendar] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast, showToast, hideToast } = useToast();
 
-  const handleClose = async () => {
-    if (!confirm('투표를 마감하시겠습니까?')) return;
-
+  const handleCloseVoting = async () => {
     setIsSubmitting(true);
     try {
       const response = await fetch(`/api/rooms/${roomId}/close`, {
@@ -44,6 +44,7 @@ export default function ResultPage() {
       const data = await response.json();
       if (data.success) {
         showToast('투표가 마감되었습니다.', 'success');
+        setShowCloseModal(false);
         refetchRoom();
       } else {
         showToast(data.error || '오류가 발생했습니다.', 'error');
@@ -135,6 +136,19 @@ export default function ResultPage() {
           </div>
         )}
 
+        {/* 전체 캘린더 */}
+        {votes && (
+          <Calendar
+            startDate={parseDate(room.startDate)}
+            endDate={parseDate(room.endDate)}
+            mySelections={{}}
+            allDates={votes.summary.allDates}
+            totalParticipants={votes.totalParticipants}
+            onDateClick={() => {}}
+            disabled
+          />
+        )}
+
         {/* BEST 날짜 */}
         {votes && (
           <VoteSummary
@@ -142,32 +156,6 @@ export default function ResultPage() {
             totalParticipants={votes.totalParticipants}
           />
         )}
-
-        {/* 전체 캘린더 */}
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <button
-            type="button"
-            onClick={() => setShowCalendar(!showCalendar)}
-            className="w-full flex items-center justify-between"
-          >
-            <span className="text-sm font-medium text-gray-700">📅 전체 캘린더 보기</span>
-            <span className="text-gray-400">{showCalendar ? '접기' : '펼치기'}</span>
-          </button>
-
-          {showCalendar && votes && (
-            <div className="mt-4">
-              <Calendar
-                startDate={parseDate(room.startDate)}
-                endDate={parseDate(room.endDate)}
-                mySelections={{}}
-                allDates={votes.summary.allDates}
-                totalParticipants={votes.totalParticipants}
-                onDateClick={() => {}}
-                disabled
-              />
-            </div>
-          )}
-        </div>
 
         {/* 참가자별 응답 */}
         {votes && votes.votes.length > 0 && (
@@ -186,7 +174,7 @@ export default function ResultPage() {
               <Button
                 variant="outline"
                 fullWidth
-                onClick={handleClose}
+                onClick={() => setShowCloseModal(true)}
                 disabled={isSubmitting}
               >
                 투표 마감
@@ -201,6 +189,12 @@ export default function ResultPage() {
             </div>
           </div>
         )}
+
+        {/* 공유 버튼 */}
+        <div className="flex gap-2 pt-4">
+          <KakaoShareButton title={room.title} roomId={room.roomId} />
+          <LinkCopyButton roomId={room.roomId} />
+        </div>
 
         {/* 돌아가기 */}
         <Link href={`/${room.roomId}`} className="block">
@@ -250,6 +244,34 @@ export default function ResultPage() {
           >
             {isSubmitting ? '처리 중...' : '확정하기'}
           </Button>
+        </div>
+      </Modal>
+
+      {/* 투표 마감 확인 모달 */}
+      <Modal
+        isOpen={showCloseModal}
+        onClose={() => setShowCloseModal(false)}
+        title="투표 마감"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">투표를 마감하시겠습니까?</p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              fullWidth
+              onClick={() => setShowCloseModal(false)}
+              disabled={isSubmitting}
+            >
+              취소
+            </Button>
+            <Button
+              fullWidth
+              onClick={handleCloseVoting}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? '처리 중...' : '마감하기'}
+            </Button>
+          </div>
         </div>
       </Modal>
 

@@ -1,3 +1,5 @@
+import type { VoteStatus } from '@/types';
+
 // 참가자 색상 배열
 const PARTICIPANT_COLORS = [
   '#22c55e', // 초록
@@ -26,14 +28,12 @@ export function getColorByName(name: string): string {
 }
 
 // 투표 상태에 따른 색상 반환
-export function getVoteStatusColor(status: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE'): string {
+export function getVoteStatusColor(status: VoteStatus): string {
   switch (status) {
     case 'AVAILABLE':
       return '#22c55e';
     case 'MAYBE':
       return '#facc15';
-    case 'UNAVAILABLE':
-      return '#ef4444';
     default:
       return '#9ca3af';
   }

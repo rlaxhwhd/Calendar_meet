@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useVisitorId } from '@/hooks/useVisitorId';
@@ -37,7 +37,13 @@ export default function VotePage() {
   const [mySelections, setMySelections] = useState<Record<string, VoteStatus>>({});
   const [hasVoted, setHasVoted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isChecked, setIsChecked] = useState(false); // 참가자 확인 완료 여부
   const { toast, showToast, hideToast } = useToast();
+
+  // 중복 등록 방지를 위한 ref
+  const isRegisteringRef = useRef(false);
+  // 초기 동기화 완료 여부 (로컬 선택 덮어쓰기 방지)
+  const isInitialSyncDoneRef = useRef(false);
 
   // 기존 투표 여부 확인
   useEffect(() => {
@@ -49,10 +55,16 @@ export default function VotePage() {
       // 이미 참가자로 등록된 경우
       setHasVoted(true);
       setNickname(myVote.nickname);
-      setMySelections(myVote.selections as Record<string, VoteStatus>);
+      // 초기 동기화가 완료되지 않은 경우에만 서버 데이터로 덮어쓰기
+      if (!isInitialSyncDoneRef.current) {
+        setMySelections(myVote.selections as Record<string, VoteStatus>);
+        isInitialSyncDoneRef.current = true;
+      }
       setShowNicknameModal(false);
-    } else if (room.isHost) {
-      // 방장인 경우: 자동으로 참가자 등록
+      setIsChecked(true);
+    } else if (room.isHost && !isRegisteringRef.current) {
+      // 방장인 경우: 자동으로 참가자 등록 (중복 방지)
+      isRegisteringRef.current = true;
       setNickname(room.hostNickname);
       setShowNicknameModal(false);
       // 방장 자동 등록
@@ -60,13 +72,20 @@ export default function VotePage() {
         if (result.success) {
           setHasVoted(true);
           refetch();
+        } else {
+          // 이미 등록된 경우에도 참가자로 처리
+          setHasVoted(true);
         }
+        setIsChecked(true);
+        isInitialSyncDoneRef.current = true;
+        isRegisteringRef.current = false;
       });
-    } else {
+    } else if (!room.isHost && !isChecked) {
       // 새 참가자인 경우: 닉네임 입력 모달 표시
       setShowNicknameModal(true);
+      setIsChecked(true);
     }
-  }, [votes, room, visitorId, registerParticipant, refetch]);
+  }, [votes, room, visitorId, isChecked, registerParticipant, refetch]);
 
   const handleDateClick = (date: Date) => {
     if (!room || room.status !== 'VOTING') return;
@@ -218,7 +237,7 @@ export default function VotePage() {
               onClick={handleSubmit}
               disabled={isSubmitting || Object.keys(mySelections).length === 0}
             >
-              {isSubmitting ? '저장 중...' : hasVoted ? '선택 수정하기' : '선택 완료'}
+              {isSubmitting ? '저장 중...' : '선택하기'}
             </Button>
           )}
 
@@ -236,9 +255,9 @@ export default function VotePage() {
         </div>
       </main>
 
-      {/* 닉네임 입력 모달 - 방장이 아니고 투표하지 않은 경우에만 표시 */}
+      {/* 닉네임 입력 모달 - 확인 완료 후, 방장이 아니고 투표하지 않은 경우에만 표시 */}
       <Modal
-        isOpen={showNicknameModal && !hasVoted && !room.isHost}
+        isOpen={isChecked && showNicknameModal && !hasVoted && !room.isHost}
         onClose={() => {}}
         title={room.title}
       >

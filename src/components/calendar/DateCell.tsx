@@ -6,7 +6,6 @@ import { VoteStatus } from '@/types';
 interface VoteSegments {
   available: number;
   maybe: number;
-  unavailable: number;
 }
 
 interface DateCellProps {
@@ -21,6 +20,18 @@ interface DateCellProps {
   disabled?: boolean;
 }
 
+// 상태별 아이콘 매핑 (컴포넌트 외부로 이동)
+const STATUS_ICONS: Record<VoteStatus, string> = {
+  AVAILABLE: '✓',
+  MAYBE: '?',
+};
+
+// 상태별 배경색 매핑 (컴포넌트 외부로 이동)
+const STATUS_BACKGROUNDS: Record<VoteStatus, string> = {
+  AVAILABLE: 'bg-green-100 border-2 border-green-400',
+  MAYBE: 'bg-yellow-100 border-2 border-yellow-400',
+};
+
 export function DateCell({
   date,
   isInRange,
@@ -33,38 +44,10 @@ export function DateCell({
   disabled = false,
 }: DateCellProps) {
   const day = date.getDate();
-
   const isClickable = isInRange && !disabled;
-
-  const getStatusColor = () => {
-    if (!voteStatus) return '#e5e7eb';
-    return getVoteStatusColor(voteStatus);
-  };
-
-  const getStatusIcon = () => {
-    if (!voteStatus) return null;
-    switch (voteStatus) {
-      case 'AVAILABLE':
-        return '✓';
-      case 'MAYBE':
-        return '?';
-      case 'UNAVAILABLE':
-        return '✕';
-    }
-  };
-
-  // 선택 상태에 따른 배경색
-  const getBackgroundColor = () => {
-    if (!voteStatus) return '';
-    switch (voteStatus) {
-      case 'AVAILABLE':
-        return 'bg-green-100 border-2 border-green-400';
-      case 'MAYBE':
-        return 'bg-yellow-100 border-2 border-yellow-400';
-      case 'UNAVAILABLE':
-        return 'bg-red-100 border-2 border-red-400';
-    }
-  };
+  const statusColor = voteStatus ? getVoteStatusColor(voteStatus) : '#e5e7eb';
+  const statusIcon = voteStatus ? STATUS_ICONS[voteStatus] : null;
+  const backgroundColor = voteStatus ? STATUS_BACKGROUNDS[voteStatus] : '';
 
   return (
     <button
@@ -76,7 +59,7 @@ export function DateCell({
         ${isClickable ? 'cursor-pointer hover:bg-gray-50 active:bg-gray-100' : 'cursor-default'}
         ${!isCurrentMonth ? 'opacity-30' : ''}
         ${!isInRange ? 'opacity-30' : ''}
-        ${voteStatus ? getBackgroundColor() : ''}
+        ${backgroundColor}
       `}
     >
       {/* 모바일: 36px, sm: 40px, md: 48px */}
@@ -100,12 +83,12 @@ export function DateCell({
             >
               {day}
             </span>
-            {voteStatus && (
+            {statusIcon && (
               <span
                 className="text-[10px] sm:text-xs font-bold leading-none"
-                style={{ color: getStatusColor() }}
+                style={{ color: statusColor }}
               >
-                {getStatusIcon()}
+                {statusIcon}
               </span>
             )}
           </div>

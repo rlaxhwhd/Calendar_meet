@@ -3,7 +3,6 @@ import React from 'react';
 interface VoteSegments {
   available: number;
   maybe: number;
-  unavailable: number;
 }
 
 interface CircularProgressProps {
@@ -22,8 +21,55 @@ interface CircularProgressProps {
 const COLORS = {
   available: '#22c55e',  // 초록
   maybe: '#facc15',      // 노랑
-  unavailable: '#ef4444', // 빨강
 };
+
+// 공통 래퍼 컴포넌트
+interface WrapperProps {
+  size: number;
+  className: string;
+  children: React.ReactNode;
+  centerContent?: React.ReactNode;
+}
+
+function CircularWrapper({ size, className, children, centerContent }: WrapperProps) {
+  return (
+    <div
+      className={`relative inline-flex items-center justify-center ${className}`}
+      style={className ? undefined : { width: size, height: size }}
+    >
+      <svg
+        viewBox={`0 0 ${size} ${size}`}
+        className="w-full h-full transform -rotate-90"
+      >
+        {children}
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        {centerContent}
+      </div>
+    </div>
+  );
+}
+
+// 배경 원 컴포넌트
+interface BackgroundCircleProps {
+  size: number;
+  radius: number;
+  strokeWidth: number;
+  backgroundColor: string;
+}
+
+function BackgroundCircle({ size, radius, strokeWidth, backgroundColor }: BackgroundCircleProps) {
+  return (
+    <circle
+      cx={size / 2}
+      cy={size / 2}
+      r={radius}
+      fill="none"
+      stroke={backgroundColor}
+      strokeWidth={strokeWidth}
+    />
+  );
+}
 
 export function CircularProgress({
   percentage,
@@ -41,140 +87,87 @@ export function CircularProgress({
 
   // 다중 세그먼트 모드 (투표 비율별 색상)
   if (segments && totalParticipants > 0) {
-    const total = segments.available + segments.maybe + segments.unavailable;
+    const total = segments.available + segments.maybe;
+
     if (total === 0) {
-      // 투표가 없으면 빈 원
       return (
-        <div
-          className={`relative inline-flex items-center justify-center ${className}`}
-          style={className ? undefined : { width: size, height: size }}
-        >
-          <svg
-            viewBox={`0 0 ${size} ${size}`}
-            className="w-full h-full transform -rotate-90"
-          >
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke={backgroundColor}
-              strokeWidth={strokeWidth}
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            {children}
-          </div>
-        </div>
+        <CircularWrapper size={size} className={className} centerContent={children}>
+          <BackgroundCircle
+            size={size}
+            radius={radius}
+            strokeWidth={strokeWidth}
+            backgroundColor={backgroundColor}
+          />
+        </CircularWrapper>
       );
     }
 
-    // 각 세그먼트의 비율 계산
     const availableRatio = segments.available / totalParticipants;
     const maybeRatio = segments.maybe / totalParticipants;
-
-    // 세그먼트별 호의 길이
     const availableLength = circumference * availableRatio;
     const maybeLength = circumference * maybeRatio;
 
-    // 시작 위치 (offset)
-    const availableOffset = 0;
-    const maybeOffset = availableLength;
-
     return (
-      <div
-        className={`relative inline-flex items-center justify-center ${className}`}
-        style={className ? undefined : { width: size, height: size }}
-      >
-        <svg
-          viewBox={`0 0 ${size} ${size}`}
-          className="w-full h-full transform -rotate-90"
-        >
-          {/* 배경 원 */}
+      <CircularWrapper size={size} className={className} centerContent={children}>
+        <BackgroundCircle
+          size={size}
+          radius={radius}
+          strokeWidth={strokeWidth}
+          backgroundColor={backgroundColor}
+        />
+        {segments.available > 0 && (
           <circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke={backgroundColor}
+            stroke={COLORS.available}
             strokeWidth={strokeWidth}
+            strokeDasharray={`${availableLength} ${circumference - availableLength}`}
+            strokeDashoffset={0}
+            className="transition-all duration-300 ease-out"
           />
-          {/* 가능 (초록) */}
-          {segments.available > 0 && (
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke={COLORS.available}
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${availableLength} ${circumference - availableLength}`}
-              strokeDashoffset={-availableOffset}
-              className="transition-all duration-300 ease-out"
-            />
-          )}
-          {/* 애매 (노랑) */}
-          {segments.maybe > 0 && (
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke={COLORS.maybe}
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${maybeLength} ${circumference - maybeLength}`}
-              strokeDashoffset={-maybeOffset}
-              className="transition-all duration-300 ease-out"
-            />
-          )}
-        </svg>
-        {/* 중앙 컨텐츠 */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          {children}
-        </div>
-      </div>
+        )}
+        {segments.maybe > 0 && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={COLORS.maybe}
+            strokeWidth={strokeWidth}
+            strokeDasharray={`${maybeLength} ${circumference - maybeLength}`}
+            strokeDashoffset={-availableLength}
+            className="transition-all duration-300 ease-out"
+          />
+        )}
+      </CircularWrapper>
     );
   }
 
-  // 단일 퍼센트 모드 (기존 방식)
+  // 단일 퍼센트 모드
   const offset = circumference - ((percentage || 0) / 100) * circumference;
 
   return (
-    <div
-      className={`relative inline-flex items-center justify-center ${className}`}
-      style={className ? undefined : { width: size, height: size }}
-    >
-      <svg
-        viewBox={`0 0 ${size} ${size}`}
-        className="w-full h-full transform -rotate-90"
-      >
-        {/* 배경 원 */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={backgroundColor}
-          strokeWidth={strokeWidth}
-        />
-        {/* 프로그레스 원 */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          strokeLinecap="round"
-          className="transition-all duration-300 ease-out"
-        />
-      </svg>
-      {/* 중앙 컨텐츠 */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        {children}
-      </div>
-    </div>
+    <CircularWrapper size={size} className={className} centerContent={children}>
+      <BackgroundCircle
+        size={size}
+        radius={radius}
+        strokeWidth={strokeWidth}
+        backgroundColor={backgroundColor}
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        className="transition-all duration-300 ease-out"
+      />
+    </CircularWrapper>
   );
 }

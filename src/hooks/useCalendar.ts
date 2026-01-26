@@ -1,9 +1,25 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+
+// 날짜를 타임스탬프로 변환 (시간 제외)
+const getDateTimestamp = (date: Date) => {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+};
+
+// 오늘 날짜 캐싱
+const getTodayTimestamp = () => {
+  const today = new Date();
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+};
 
 export function useCalendar(startDate: Date, endDate: Date) {
   const [currentMonth, setCurrentMonth] = useState(() => {
     return new Date(startDate.getFullYear(), startDate.getMonth(), 1);
   });
+
+  // 시작/종료 날짜 타임스탬프 캐싱
+  const startTimestamp = useMemo(() => getDateTimestamp(startDate), [startDate]);
+  const endTimestamp = useMemo(() => getDateTimestamp(endDate), [endDate]);
+  const todayTimestamp = useMemo(() => getTodayTimestamp(), []);
 
   const daysInMonth = useMemo(() => {
     const year = currentMonth.getFullYear();
@@ -34,37 +50,30 @@ export function useCalendar(startDate: Date, endDate: Date) {
     return days;
   }, [currentMonth]);
 
-  const isInRange = (date: Date) => {
-    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const startOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-    const endOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-    return dateOnly >= startOnly && dateOnly <= endOnly;
-  };
+  const isInRange = useCallback((date: Date) => {
+    const dateTimestamp = getDateTimestamp(date);
+    return dateTimestamp >= startTimestamp && dateTimestamp <= endTimestamp;
+  }, [startTimestamp, endTimestamp]);
 
-  const isCurrentMonth = (date: Date) => {
+  const isCurrentMonth = useCallback((date: Date) => {
     return date.getMonth() === currentMonth.getMonth();
-  };
+  }, [currentMonth]);
 
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
+  const isToday = useCallback((date: Date) => {
+    return getDateTimestamp(date) === todayTimestamp;
+  }, [todayTimestamp]);
 
-  const goToPreviousMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-  };
+  const goToPreviousMonth = useCallback(() => {
+    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  }, []);
 
-  const goToNextMonth = () => {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
-  };
+  const goToNextMonth = useCallback(() => {
+    setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  }, []);
 
-  const formatMonthYear = () => {
+  const formatMonthYear = useCallback(() => {
     return `${currentMonth.getFullYear()}년 ${currentMonth.getMonth() + 1}월`;
-  };
+  }, [currentMonth]);
 
   return {
     currentMonth,

@@ -10,7 +10,7 @@ interface CalendarProps {
   startDate: Date;
   endDate: Date;
   mySelections: Record<string, VoteStatus>;
-  allDates?: Record<string, { available: number; maybe: number; unavailable: number }>;
+  allDates?: Record<string, { available: number; maybe: number }>;
   totalParticipants?: number;
   onDateClick: (date: Date) => void;
   disabled?: boolean;
@@ -38,7 +38,7 @@ export function Calendar({
   const getVoteSegments = (date: Date) => {
     const dateStr = formatDate(date);
     const counts = allDates[dateStr];
-    if (!counts) return { available: 0, maybe: 0, unavailable: 0 };
+    if (!counts) return { available: 0, maybe: 0 };
     return counts;
   };
 
@@ -51,11 +51,11 @@ export function Calendar({
       />
 
       <CalendarGrid>
-        {daysInMonth.map((date, index) => {
+        {daysInMonth.map((date) => {
           const dateStr = formatDate(date);
           return (
             <DateCell
-              key={index}
+              key={dateStr}
               date={date}
               isInRange={isInRange(date)}
               isToday={isToday(date)}

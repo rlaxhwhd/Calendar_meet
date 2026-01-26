@@ -1,5 +1,5 @@
 // 투표 상태
-export type VoteStatus = 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE';
+export type VoteStatus = 'AVAILABLE' | 'MAYBE';
 
 // 방 상태
 export type RoomStatus = 'VOTING' | 'CLOSED' | 'CONFIRMED' | 'EXPIRED';
@@ -67,7 +67,6 @@ export interface VotesResponse {
     allDates: Record<string, {
       available: number;
       maybe: number;
-      unavailable: number;
     }>;
   };
   totalParticipants: number;
