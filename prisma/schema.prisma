@@ -97,5 +97,4 @@ model VoteSelection {
 enum VoteStatus {
   AVAILABLE     // 가능 (초록)
   MAYBE         // 애매함 (노랑)
-  UNAVAILABLE   // 불가능 (빨강/선택안함)
 }

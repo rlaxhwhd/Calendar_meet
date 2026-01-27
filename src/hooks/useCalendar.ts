@@ -34,11 +34,17 @@ export function useCalendar(startDate: Date, endDate: Date) {
     return days;
   }, [currentMonth]);
 
+  // 날짜 비교를 위한 헬퍼 (시간 제외)
+  const isSameDay = (d1: Date, d2: Date) => {
+    return d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate();
+  };
+
   const isInRange = (date: Date) => {
-    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    const startOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-    const endOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-    return dateOnly >= startOnly && dateOnly <= endOnly;
+    // 타임스탬프로 비교 (시간 00:00:00 설정된 Date 객체라고 가정하거나, 날짜만 비교)
+    // 성능을 위해 간단한 타임스탬프 비교로 변경
+    return date >= startDate && date <= endDate;
   };
 
   const isCurrentMonth = (date: Date) => {
@@ -47,11 +53,7 @@ export function useCalendar(startDate: Date, endDate: Date) {
 
   const isToday = (date: Date) => {
     const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
+    return isSameDay(date, today);
   };
 
   const goToPreviousMonth = () => {

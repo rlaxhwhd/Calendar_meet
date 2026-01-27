@@ -3,7 +3,6 @@ import React from 'react';
 interface VoteSegments {
   available: number;
   maybe: number;
-  unavailable: number;
 }
 
 interface CircularProgressProps {
@@ -22,7 +21,6 @@ interface CircularProgressProps {
 const COLORS = {
   available: '#22c55e',  // 초록
   maybe: '#facc15',      // 노랑
-  unavailable: '#ef4444', // 빨강
 };
 
 export function CircularProgress({
@@ -39,47 +37,50 @@ export function CircularProgress({
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
 
+  // 공통 SVG 래퍼
+  const ProgressWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div
+      className={`relative inline-flex items-center justify-center ${className}`}
+      style={className ? undefined : { width: size, height: size }}
+    >
+      <svg
+        viewBox={`0 0 ${size} ${size}`}
+        className="w-full h-full transform -rotate-90"
+      >
+        {/* 배경 원 */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={backgroundColor}
+          strokeWidth={strokeWidth}
+        />
+        {children}
+      </svg>
+      {/* 중앙 컨텐츠 */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        {children}
+      </div>
+    </div>
+  );
+
   // 다중 세그먼트 모드 (투표 비율별 색상)
   if (segments && totalParticipants > 0) {
-    const total = segments.available + segments.maybe + segments.unavailable;
+    const total = segments.available + segments.maybe;
+
+    // 투표가 없으면 배경만 표시
     if (total === 0) {
-      // 투표가 없으면 빈 원
-      return (
-        <div
-          className={`relative inline-flex items-center justify-center ${className}`}
-          style={className ? undefined : { width: size, height: size }}
-        >
-          <svg
-            viewBox={`0 0 ${size} ${size}`}
-            className="w-full h-full transform -rotate-90"
-          >
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke={backgroundColor}
-              strokeWidth={strokeWidth}
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            {children}
-          </div>
-        </div>
-      );
+      return <ProgressWrapper>{children}</ProgressWrapper>;
     }
 
     // 각 세그먼트의 비율 계산
     const availableRatio = segments.available / totalParticipants;
     const maybeRatio = segments.maybe / totalParticipants;
 
-    // 세그먼트별 호의 길이
+    const circumference = radius * 2 * Math.PI;
     const availableLength = circumference * availableRatio;
     const maybeLength = circumference * maybeRatio;
-
-    // 시작 위치 (offset)
-    const availableOffset = 0;
-    const maybeOffset = availableLength;
 
     return (
       <div
@@ -109,7 +110,7 @@ export function CircularProgress({
               stroke={COLORS.available}
               strokeWidth={strokeWidth}
               strokeDasharray={`${availableLength} ${circumference - availableLength}`}
-              strokeDashoffset={-availableOffset}
+              strokeDashoffset={0}
               className="transition-all duration-300 ease-out"
             />
           )}
@@ -123,12 +124,11 @@ export function CircularProgress({
               stroke={COLORS.maybe}
               strokeWidth={strokeWidth}
               strokeDasharray={`${maybeLength} ${circumference - maybeLength}`}
-              strokeDashoffset={-maybeOffset}
+              strokeDashoffset={-availableLength}
               className="transition-all duration-300 ease-out"
             />
           )}
         </svg>
-        {/* 중앙 컨텐츠 */}
         <div className="absolute inset-0 flex items-center justify-center">
           {children}
         </div>
@@ -136,7 +136,7 @@ export function CircularProgress({
     );
   }
 
-  // 단일 퍼센트 모드 (기존 방식)
+  // 단일 퍼센트 모드
   const offset = circumference - ((percentage || 0) / 100) * circumference;
 
   return (
@@ -171,7 +171,6 @@ export function CircularProgress({
           className="transition-all duration-300 ease-out"
         />
       </svg>
-      {/* 중앙 컨텐츠 */}
       <div className="absolute inset-0 flex items-center justify-center">
         {children}
       </div>

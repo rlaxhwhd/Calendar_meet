@@ -9,7 +9,6 @@ interface VoteStatusProps {
 const STATUS_OPTIONS: { status: VoteStatusType; label: string; icon: string; color: string }[] = [
   { status: 'AVAILABLE', label: '가능', icon: '✓', color: 'bg-green-500' },
   { status: 'MAYBE', label: '애매', icon: '△', color: 'bg-yellow-400' },
-  { status: 'UNAVAILABLE', label: '불가', icon: '✕', color: 'bg-red-500' },
 ];
 
 export function VoteStatusSelector({ currentStatus, onStatusChange }: VoteStatusProps) {

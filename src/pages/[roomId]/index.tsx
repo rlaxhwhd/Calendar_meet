@@ -222,7 +222,7 @@ export default function VotePage() {
               onClick={handleSubmit}
               disabled={isSubmitting || Object.keys(mySelections).length === 0}
             >
-              {isSubmitting ? '저장 중...' : hasVoted ? '선택 수정하기' : '선택 완료'}
+              {isSubmitting ? '저장 중...' : hasVoted ? '선택하기' : '선택 완료'}
             </Button>
           )}
 
@@ -243,7 +243,7 @@ export default function VotePage() {
       {/* 닉네임 입력 모달 - 초기화 완료 후, 방장이 아니고 투표하지 않은 경우에만 표시 */}
       <Modal
         isOpen={isInitialized && showNicknameModal && !hasVoted && !room.isHost}
-        onClose={() => {}}
+        onClose={() => { }}
         title={room.title}
       >
         <div className="space-y-4">

@@ -49,21 +49,20 @@ async function handleGet(roomId: string, req: NextApiRequest, res: NextApiRespon
         const dateStr = sel.date.toISOString().split('T')[0];
         acc[dateStr] = sel.status;
         return acc;
-      }, {} as Record<string, string>),
+      }, {} as Record<string, VoteStatus>),
     }));
 
     // 날짜별 집계
-    const allDates: Record<string, { available: number; maybe: number; unavailable: number }> = {};
+    const allDates: Record<string, { available: number; maybe: number }> = {};
 
     votes.forEach((vote) => {
       vote.selections.forEach((sel) => {
         const dateStr = sel.date.toISOString().split('T')[0];
         if (!allDates[dateStr]) {
-          allDates[dateStr] = { available: 0, maybe: 0, unavailable: 0 };
+          allDates[dateStr] = { available: 0, maybe: 0 };
         }
         if (sel.status === 'AVAILABLE') allDates[dateStr].available++;
         else if (sel.status === 'MAYBE') allDates[dateStr].maybe++;
-        else allDates[dateStr].unavailable++;
       });
     });
 
@@ -156,11 +155,11 @@ async function handlePost(roomId: string, req: NextApiRequest, res: NextApiRespo
         visitorId,
         selections: selections && Object.keys(selections).length > 0
           ? {
-              create: Object.entries(selections).map(([date, status]) => ({
-                date: new Date(date),
-                status: status as VoteStatus,
-              })),
-            }
+            create: Object.entries(selections).map(([date, status]) => ({
+              date: new Date(date),
+              status: status as VoteStatus,
+            })),
+          }
           : undefined,
       },
     });
@@ -204,18 +203,19 @@ async function handlePut(roomId: string, req: NextApiRequest, res: NextApiRespon
       return res.status(404).json({ success: false, error: '투표 기록을 찾을 수 없습니다.' });
     }
 
-    // 기존 선택 삭제 후 새로 생성
-    await prisma.voteSelection.deleteMany({
-      where: { voteId: vote.id },
-    });
-
-    await prisma.voteSelection.createMany({
-      data: Object.entries(selections).map(([date, status]) => ({
-        voteId: vote.id,
-        date: new Date(date),
-        status: status as VoteStatus,
-      })),
-    });
+    // 기존 선택 삭제 후 새로 생성을 트랜잭션으로 처리
+    await prisma.$transaction([
+      prisma.voteSelection.deleteMany({
+        where: { voteId: vote.id },
+      }),
+      prisma.voteSelection.createMany({
+        data: Object.entries(selections).map(([date, status]) => ({
+          voteId: vote.id,
+          date: new Date(date),
+          status: status as VoteStatus,
+        })),
+      }),
+    ]);
 
     return res.status(200).json({ success: true, message: '투표가 수정되었습니다.' });
   } catch (error) {
