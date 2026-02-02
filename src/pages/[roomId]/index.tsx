@@ -253,7 +253,7 @@ export default function VotePage() {
         </div>
 
         {/* 공유 버튼 */}
-        <div className="flex gap-2 pt-4">
+        <div className="flex justify-center gap-2 pt-4">
           <KakaoShareButton title={room.title} roomId={room.roomId} />
           <LinkCopyButton roomId={room.roomId} />
         </div>

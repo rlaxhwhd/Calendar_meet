@@ -160,6 +160,12 @@ export default function ResultPage() {
           />
         )}
 
+        {/* 공유 버튼 */}
+        <div className="flex justify-center gap-2">
+          <KakaoShareButton title={room.title} roomId={room.roomId} />
+          <LinkCopyButton roomId={room.roomId} />
+        </div>
+
         {/* 참가자별 응답 */}
         {votes && votes.votes.length > 0 && (
           <ParticipantList
@@ -192,12 +198,6 @@ export default function ResultPage() {
             </div>
           </div>
         )}
-
-        {/* 공유 버튼 */}
-        <div className="flex gap-2 pt-4">
-          <KakaoShareButton title={room.title} roomId={room.roomId} />
-          <LinkCopyButton roomId={room.roomId} />
-        </div>
 
         {/* 돌아가기 */}
         <Link href={`/${room.roomId}`} className="block">

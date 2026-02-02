@@ -20,7 +20,8 @@
       "Bash(docker ps:*)",
       "Bash(npx tsc --noEmit)",
       "Bash(pkill:*)",
-      "Bash(npx prisma generate:*)"
+      "Bash(npx prisma generate:*)",
+      "Bash(git rebase:*)"
     ]
   }
 }
