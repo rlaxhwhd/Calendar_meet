@@ -30,8 +30,8 @@ export default function VotePage() {
     visitorId
   );
 
-  // 초기 로딩 완료 여부 (visitorId와 votes가 모두 로드된 후에만 모달 표시)
-  const isInitialized = !!visitorId && !votesLoading && !!votes;
+  // 초기 로딩 완료 여부 (visitorId, room, votes가 모두 로드된 후에만 모달 표시)
+  const isInitialized = !!visitorId && !roomLoading && !!room && !votesLoading && !!votes;
 
   const [showNicknameModal, setShowNicknameModal] = useState(false);
   const [nickname, setNickname] = useState('');
