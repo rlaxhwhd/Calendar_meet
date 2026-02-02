@@ -137,17 +137,20 @@ export default function ResultPage() {
         )}
 
         {/* 전체 캘린더 */}
-        {votes && (
-          <Calendar
-            startDate={parseDate(room.startDate)}
-            endDate={parseDate(room.endDate)}
-            mySelections={{}}
-            allDates={votes.summary.allDates}
-            totalParticipants={votes.totalParticipants}
-            onDateClick={() => {}}
-            disabled
-          />
-        )}
+        <div className="bg-white rounded-lg p-4 shadow-sm">
+          <p className="text-sm font-medium text-gray-700 mb-4">📅 전체 캘린더</p>
+          {votes && (
+            <Calendar
+              startDate={parseDate(room.startDate)}
+              endDate={parseDate(room.endDate)}
+              mySelections={{}}
+              allDates={votes.summary.allDates}
+              totalParticipants={votes.totalParticipants}
+              onDateClick={() => {}}
+              disabled
+            />
+          )}
+        </div>
 
         {/* BEST 날짜 */}
         {votes && (
@@ -254,7 +257,7 @@ export default function ResultPage() {
         title="투표 마감"
       >
         <div className="space-y-4">
-          <p className="text-gray-600">투표를 마감하시겠습니까?</p>
+          <p className="text-gray-600">투표를 마감하시겠습니까?<br />마감 후에는 더 이상 투표할 수 없습니다.</p>
           <div className="flex gap-2">
             <Button
               variant="outline"

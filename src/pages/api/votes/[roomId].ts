@@ -162,11 +162,11 @@ async function handlePost(roomId: string, req: NextApiRequest, res: NextApiRespo
         visitorId,
         selections: selections && Object.keys(selections).length > 0
           ? {
-              create: Object.entries(selections).map(([date, status]) => ({
-                date: new Date(date),
-                status: status as VoteStatus,
-              })),
-            }
+            create: Object.entries(selections).map(([date, status]) => ({
+              date: new Date(date),
+              status: status as VoteStatus,
+            })),
+          }
           : undefined,
       },
     });

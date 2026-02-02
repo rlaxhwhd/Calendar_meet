@@ -25,10 +25,13 @@ export default function VotePage() {
     roomId as string,
     visitorId
   );
-  const { votes, registerParticipant, submitVote, updateVote, refetch } = useVote(
+  const { votes, isLoading: votesLoading, registerParticipant, submitVote, updateVote, refetch } = useVote(
     roomId as string,
     visitorId
   );
+
+  // 초기 로딩 완료 여부 (visitorId와 votes가 모두 로드된 후에만 모달 표시)
+  const isInitialized = !!visitorId && !votesLoading && !!votes;
 
   const [showNicknameModal, setShowNicknameModal] = useState(false);
   const [nickname, setNickname] = useState('');
@@ -47,7 +50,8 @@ export default function VotePage() {
 
   // 기존 투표 여부 확인
   useEffect(() => {
-    if (!votes || !room || !visitorId) return;
+    // 초기화가 완료되지 않으면 아무것도 하지 않음
+    if (!isInitialized || !room) return;
 
     const myVote = votes.votes.find((v) => v.isMe);
 
@@ -85,7 +89,7 @@ export default function VotePage() {
       setShowNicknameModal(true);
       setIsChecked(true);
     }
-  }, [votes, room, visitorId, isChecked, registerParticipant, refetch]);
+  }, [isInitialized, votes, room, registerParticipant, refetch, isChecked]);
 
   const handleDateClick = (date: Date) => {
     if (!room || room.status !== 'VOTING') return;
@@ -255,9 +259,9 @@ export default function VotePage() {
         </div>
       </main>
 
-      {/* 닉네임 입력 모달 - 확인 완료 후, 방장이 아니고 투표하지 않은 경우에만 표시 */}
+      {/* 닉네임 입력 모달 - 초기화 완료 후, 방장이 아니고 투표하지 않은 경우에만 표시 */}
       <Modal
-        isOpen={isChecked && showNicknameModal && !hasVoted && !room.isHost}
+        isOpen={isInitialized && showNicknameModal && !hasVoted && !room.isHost}
         onClose={() => {}}
         title={room.title}
       >
