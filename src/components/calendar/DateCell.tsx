@@ -26,10 +26,10 @@ const STATUS_ICONS: Record<VoteStatus, string> = {
   MAYBE: '?',
 };
 
-// 상태별 배경색 매핑 (컴포넌트 외부로 이동)
+// 상태별 배경색 매핑 (ring 사용으로 흔들림 방지)
 const STATUS_BACKGROUNDS: Record<VoteStatus, string> = {
-  AVAILABLE: 'bg-green-100 border-2 border-green-400',
-  MAYBE: 'bg-yellow-100 border-2 border-yellow-400',
+  AVAILABLE: 'bg-green-100 ring-2 ring-green-400 ring-inset',
+  MAYBE: 'bg-yellow-100 ring-2 ring-yellow-400 ring-inset',
 };
 
 export function DateCell({
