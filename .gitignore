@@ -43,5 +43,14 @@ next-env.d.ts
 *.swp
 *.swo
 
-# Claude Code
+# AI Tools
 .claude/
+.agents/
+.codex/
+.gemini/
+
+# Docs (배포 불필요)
+DEPLOYMENT.md
+DEPLOY.md
+CLAUDE.md
+CLAUDE_CODE.md
